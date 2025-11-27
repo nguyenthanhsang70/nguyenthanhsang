@@ -2,316 +2,417 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>System Update</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SYSTEM FAILURE - CRITICAL PROCESS DIED</title>
 <style>
-  /* --- CẤU HÌNH CHUNG --- */
-  body, html {
-    margin: 0; padding: 0; width: 100%; height: 100%;
-    overflow: hidden; user-select: none; cursor: none;
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap');
+
+  body {
     background-color: #000;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #0f0;
+    font-family: 'Share Tech Mono', monospace;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    height: 100vh;
+    cursor: none; /* Ẩn chuột */
+    user-select: none;
+  }
+
+  /* Hiệu ứng màn hình CRT cũ */
+  .crt::before {
+    content: " ";
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    z-index: 2;
+    background-size: 100% 2px, 3px 100%;
+    pointer-events: none;
   }
   
-  .hidden { display: none !important; }
-
-  /* Màn hình bắt đầu (để kích hoạt Fullscreen & Sound) */
-  #overlay-start {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: #000; z-index: 9999;
-    display: flex; justify-content: center; align-items: center;
-    color: #fff; font-family: monospace;
-    cursor: pointer; text-align: center;
+  .crt::after {
+    content: " ";
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: rgba(18, 16, 16, 0.1);
+    opacity: 0;
+    z-index: 2;
+    pointer-events: none;
+    animation: flicker 0.15s infinite;
   }
-  .blink { animation: blinker 1s linear infinite; }
-  @keyframes blinker { 50% { opacity: 0; } }
 
-  /* --- GIAO DIỆN WINDOWS (BSOD) --- */
-  #view-windows {
-    background-color: #0078d7; color: #fff;
-    padding: 10% 15%; height: 100%; box-sizing: border-box;
-    display: none;
+  @keyframes flicker {
+    0% { opacity: 0.02; }
+    50% { opacity: 0.05; }
+    100% { opacity: 0.02; }
   }
-  .win-sad { font-size: 100px; margin-bottom: 30px; }
-  .win-title { font-size: 24px; margin-bottom: 20px; font-weight: 300; }
-  .win-details { margin-top: 30px; display: flex; align-items: center; font-size: 14px; }
-  .qr-code { width: 100px; height: 100px; background: #fff; margin-right: 15px; }
 
-  /* --- GIAO DIỆN MACOS (Kernel Panic) --- */
-  #view-mac {
-    background-color: #1a1a1a; color: #d6d6d6;
-    height: 100%; display: none;
-    flex-direction: column; justify-content: center; align-items: center;
-    text-align: center;
+  /* Giao diện chính */
+  #terminal {
     position: relative;
-  }
-  #view-mac::before {
-    content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.5); /* Hiệu ứng màn mờ */
-  }
-  .mac-box {
-    z-index: 2; width: 300px;
-    background: #2b2b2b; padding: 40px; border-radius: 10px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-  }
-  .power-icon {
-    width: 60px; height: 60px; border: 3px solid #888; border-radius: 50%;
-    margin: 0 auto 20px; position: relative;
-  }
-  .power-line {
-    position: absolute; top: -10%; left: 50%; transform: translateX(-50%);
-    width: 3px; height: 25px; background: #2b2b2b; z-index: 2;
-  }
-  .power-symbol {
-    position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
-    width: 3px; height: 20px; background: #888;
+    padding: 20px;
+    z-index: 1;
+    height: 100%;
+    box-sizing: border-box;
+    text-shadow: 0 0 5px #0f0;
   }
 
-  /* --- GIAO DIỆN MOBILE (Android/iOS Hacking) --- */
-  #view-mobile {
-    background-color: #000; color: #0f0;
+  .header {
+    border-bottom: 2px solid #0f0;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    animation: glitch-anim 2s infinite;
+  }
+
+  .danger-text {
+    color: #f00;
+    text-shadow: 0 0 5px #f00;
+    font-weight: bold;
+  }
+
+  #log-container {
+    height: 80vh;
+    overflow-y: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    font-size: 14px;
+    line-height: 1.2;
+  }
+
+  .log-line { margin: 2px 0; }
+  .log-info { color: #0f0; }
+  .log-warn { color: #ff0; text-shadow: 0 0 5px #ff0; }
+  .log-err { color: #f00; background: rgba(255,0,0,0.1); text-shadow: 0 0 8px #f00; }
+  .log-hex { color: #888; font-size: 12px; }
+
+  /* Màn hình khởi đầu (để kích hoạt âm thanh) */
+  #start-screen {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: #000;
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    cursor: pointer;
+  }
+  
+  #start-screen h1 {
+    animation: blink 1s infinite;
+    font-size: 2em;
+    color: #fff;
+  }
+
+  /* Màn hình xanh chết chóc (BSOD) */
+  #bsod {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-color: #0078d7;
+    color: #fff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding: 100px;
+    box-sizing: border-box;
+    z-index: 5000;
+    cursor: none;
+  }
+
+  .bsod-face { font-size: 100px; margin-bottom: 40px; }
+  .bsod-text { font-size: 24px; margin-bottom: 20px; }
+  .bsod-small { font-size: 16px; margin-top: 30px; }
+
+  /* Màn hình Ransomware */
+  #ransomware {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: #000;
+    color: #f00;
+    z-index: 6000;
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
     font-family: 'Courier New', Courier, monospace;
-    height: 100%; display: none;
-    flex-direction: column; padding: 20px;
   }
-  .term-line { margin-bottom: 5px; font-size: 14px; word-break: break-all;}
-  .mobile-alert-box {
-    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    background: #222; border: 1px solid #444; color: #fff;
-    padding: 20px; width: 80%; border-radius: 8px;
-    text-align: center; box-shadow: 0 0 20px rgba(255,0,0,0.5);
-    display: none; font-family: sans-serif;
+
+  .lock-icon { font-size: 80px; margin-bottom: 20px; animation: shake 0.5s infinite; }
+  
+  @keyframes blink { 50% { opacity: 0; } }
+  @keyframes glitch-anim {
+    0% { transform: translate(0); }
+    20% { transform: translate(-2px, 2px); }
+    40% { transform: translate(-2px, -2px); }
+    60% { transform: translate(2px, 2px); }
+    80% { transform: translate(2px, -2px); }
+    100% { transform: translate(0); }
   }
-  .progress-bar {
-    width: 100%; height: 10px; background: #333; margin-top: 15px;
-    border-radius: 5px; overflow: hidden;
-  }
-  .progress-fill {
-    height: 100%; background: #f00; width: 0%; transition: width 0.2s;
+  @keyframes shake {
+    0% { transform: translate(1px, 1px) rotate(0deg); }
+    10% { transform: translate(-1px, -2px) rotate(-1deg); }
+    20% { transform: translate(-3px, 0px) rotate(1deg); }
+    30% { transform: translate(3px, 2px) rotate(0deg); }
+    40% { transform: translate(1px, -1px) rotate(1deg); }
+    50% { transform: translate(-1px, 2px) rotate(-1deg); }
+    60% { transform: translate(-3px, 1px) rotate(0deg); }
+    70% { transform: translate(3px, 1px) rotate(-1deg); }
+    80% { transform: translate(-1px, -1px) rotate(1deg); }
+    90% { transform: translate(1px, 2px) rotate(0deg); }
+    100% { transform: translate(1px, -2px) rotate(-1deg); }
   }
 </style>
 </head>
-<body>
+<body class="crt">
 
-<div id="overlay-start">
-  <div>
-    <h1>SYSTEM DIAGNOSTIC TOOL</h1>
-    <p class="blink">TAP ANYWHERE TO START</p>
+<div id="start-screen">
+  <h1>CLICK ANYWHERE TO INITIALIZE SYSTEM DIAGNOSTICS</h1>
+  <p>[ WARNING: DO NOT TURN OFF YOUR COMPUTER ]</p>
+</div>
+
+<div id="terminal">
+  <div class="header">
+    <span>NTS SECURE SHELL v4.2.0</span>
+    <span id="clock">00:00:00</span>
+    <span class="danger-text">UNAUTHORIZED ACCESS DETECTED</span>
+  </div>
+  <div id="log-container"></div>
+</div>
+
+<div id="bsod">
+  <div class="bsod-face">:(</div>
+  <div class="bsod-text">Your PC ran into a problem and needs to restart. We're just collecting some error info, and then we'll restart for you.</div>
+  <div class="bsod-text" id="bsod-percent">0% complete</div>
+  <div class="bsod-small">
+    Stop code: CRITICAL_PROCESS_DIED<br>
+    What failed: ntoskrnl.exe
   </div>
 </div>
 
-<div id="view-windows">
-  <div class="win-sad">:(</div>
-  <div class="win-title">Your PC ran into a problem and needs to restart. We're just collecting some error info, and then we'll restart for you.</div>
-  <div class="win-title" id="win-percent">0% complete</div>
-  <div class="win-details">
-    <div class="qr-code" style="display:flex; justify-content:center; align-items:center; color:#0078d7; font-weight:bold;">QR</div>
-    <div>
-      <p>For more information about this issue and possible fixes, visit https://www.windows.com/stopcode</p>
-      <p>If you call a support person, give them this info:</p>
-      <p>Stop code: CRITICAL_PROCESS_DIED</p>
-    </div>
-  </div>
-</div>
-
-<div id="view-mac">
-  <div class="mac-box">
-    <div class="power-icon">
-        <div class="power-line"></div>
-        <div class="power-symbol"></div>
-    </div>
-    <p style="font-weight: bold; margin-bottom: 10px;">You need to restart your computer.</p>
-    <p style="font-size: 12px; color: #888;">Hold down the Power button for several seconds or press the Restart button.</p>
-    <br>
-    <p style="font-size: 12px; color: #888;">Veuillez redémarrer votre ordinateur.</p>
-    <p style="font-size: 12px; color: #888;">Sie müssen Ihren Computer neu starten.</p>
-    <p style="font-size: 12px; color: #888;">電腦因出現問題而重新啟動。</p>
-  </div>
-</div>
-
-<div id="view-mobile">
-  <div id="term-output"></div>
-  <div class="mobile-alert-box" id="mobile-popup">
-    <h3 style="color:red; margin-top:0;">CRITICAL FAILURE</h3>
-    <p>System files corrupted.</p>
-    <p>Initiating Emergency Factory Reset...</p>
-    <div class="progress-bar"><div class="progress-fill" id="reset-bar"></div></div>
-    <p id="reset-text" style="font-size:12px; margin-top:5px; color:#aaa;">Erasing /data/user/0...</p>
+<div id="ransomware">
+  <div class="lock-icon">🔒</div>
+  <h1 style="color: red; text-shadow: 2px 2px 0px #fff;">YOUR FILES HAVE BEEN ENCRYPTED</h1>
+  <p>All your documents, photos, databases and other important files have been encrypted with a strong key.</p>
+  <p>Private decryption key is stored on our internet server and nobody can decrypt your files until you pay and obtain the private key.</p>
+  <br>
+  <div style="border: 1px solid red; padding: 20px; background: rgba(50,0,0,0.5);">
+    <p>PAYMENT REQUIRED: 0.5 BTC</p>
+    <p>WALLET: 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa</p>
+    <p id="countdown" style="font-size: 24px; font-weight: bold;">TIME REMAINING: 48:00:00</p>
   </div>
 </div>
 
 <script>
-  // --- DETECT OS ---
-  function getOS() {
-    const userAgent = window.navigator.userAgent;
-    const platform = window.navigator.platform;
-    const macosPlatforms = ['Macintosh', 'MacIntel', 'MacPPC', 'Mac68K'];
-    const windowsPlatforms = ['Win32', 'Win64', 'Windows', 'WinCE'];
-    const iosPlatforms = ['iPhone', 'iPad', 'iPod'];
-
-    if (macosPlatforms.indexOf(platform) !== -1) return 'Mac';
-    if (iosPlatforms.indexOf(platform) !== -1) return 'iOS';
-    if (windowsPlatforms.indexOf(platform) !== -1) return 'Windows';
-    if (/Android/.test(userAgent)) return 'Android';
-    if (/Linux/.test(platform)) return 'Linux'; // Coi như Android/Linux
-    return 'Unknown';
+  // --- AUDIO ENGINE (Tạo âm thanh bằng code, không cần file ngoài) ---
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  
+  function playNoise(duration) {
+    const bufferSize = audioCtx.sampleRate * duration;
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = buffer;
+    const gain = audioCtx.createGain();
+    gain.gain.value = 0.05;
+    noise.connect(gain);
+    gain.connect(audioCtx.destination);
+    noise.start();
   }
 
-  // --- AUDIO ENGINE ---
-  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  function playSound(type) {
+  function playBeep(freq = 1000, type = 'square', len = 0.1) {
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
-    
-    if (type === 'beep') { // Windows error beep
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(400, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.5);
-    } else if (type === 'glitch') { // Mobile glitch
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(Math.random()*1000, audioCtx.currentTime);
-    } else if (type === 'static') { // Noise
-        // Noise buffer logic here (simplified)
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(50, audioCtx.currentTime);
-    }
-
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + len);
     osc.connect(gain);
     gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + len);
+  }
+
+  function playGlitchSound() {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+    osc.frequency.linearRampToValueAtTime(800, audioCtx.currentTime + 0.1);
+    osc.frequency.linearRampToValueAtTime(50, audioCtx.currentTime + 0.3);
     
-    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    // Distortion
+    const shaper = audioCtx.createWaveShaper();
+    shaper.curve = new Float32Array([-1, 1]);
+    
+    osc.connect(shaper);
+    shaper.connect(gain);
+    gain.connect(audioCtx.destination);
+    
+    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
     
     osc.start();
     osc.stop(audioCtx.currentTime + 0.5);
   }
 
-  // --- LOGIC CHÍNH ---
-  document.getElementById('overlay-start').addEventListener('click', function() {
-    // 1. Fullscreen
-    const elem = document.documentElement;
-    if (elem.requestFullscreen) { elem.requestFullscreen(); } 
-    else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); } // Safari
+  // --- LOGIC CHƯƠNG TRÌNH ---
+  const startScreen = document.getElementById('start-screen');
+  const terminal = document.getElementById('terminal');
+  const logContainer = document.getElementById('log-container');
+  const bsod = document.getElementById('bsod');
+  const ransomware = document.getElementById('ransomware');
+  
+  // Hàm tạo dòng log ngẫu nhiên
+  const techWords = ['KERNEL', 'BIOS', 'UEFI', 'ROOT', 'BUFFER', 'STACK', 'POINTER', 'HANDLER', 'THREAD', 'DAEMON'];
+  const hex = () => '0x' + Math.floor(Math.random()*16777215).toString(16).toUpperCase().padStart(8, '0');
+  
+  function createLog() {
+    const r = Math.random();
+    let type = 'log-info';
+    let text = '';
+    const time = new Date().toLocaleTimeString('en-US', {hour12:false}) + "." + Math.floor(Math.random()*999);
 
-    // 2. Audio Init
-    audioCtx.resume();
-
-    // 3. Detect & Render
-    this.style.display = 'none';
-    const os = getOS();
-    
-    if (os === 'Windows') {
-        startWindowsScenario();
-    } else if (os === 'Mac') {
-        startMacScenario();
-    } else if (os === 'Android' || os === 'iOS' || os === 'Linux') {
-        startMobileScenario();
+    if (r < 0.7) {
+        text = `[${time}] [INFO] Process ${Math.floor(Math.random()*9000)}: Checking ${techWords[Math.floor(Math.random()*techWords.length)]} integrity... OK`;
+    } else if (r < 0.9) {
+        type = 'log-warn';
+        text = `[${time}] [WARN] Latency spike detected at address ${hex()}`;
+        playBeep(400, 'sawtooth', 0.05);
     } else {
-        // Mặc định cho unknown
-        startMobileScenario(); 
+        type = 'log-err';
+        text = `[${time}] [CRITICAL] SEGMENTATION FAULT at ${hex()} - ACCESS DENIED`;
+        playBeep(150, 'square', 0.1);
     }
-  });
-
-  // --- KỊCH BẢN WINDOWS ---
-  function startWindowsScenario() {
-    const view = document.getElementById('view-windows');
-    view.style.display = 'block';
-    document.body.style.cursor = 'none';
     
-    // Giả lập tiếng ổ cứng treo
-    const loopSound = setInterval(() => playSound('beep'), 200); // Tiếng è è khó chịu
-    setTimeout(() => clearInterval(loopSound), 2000); // Tắt sau 2s để tạo cảm giác "im lặng chết chóc"
+    if(Math.random() > 0.8) {
+        text += `<div class="log-hex">Dump: ${hex()} ${hex()} ${hex()} ${hex()}</div>`;
+    }
 
-    let percent = 0;
-    const pText = document.getElementById('win-percent');
+    const div = document.createElement('div');
+    div.className = `log-line ${type}`;
+    div.innerHTML = text;
+    logContainer.appendChild(div);
     
-    // Tăng % chậm chạp gây ức chế
-    const interval = setInterval(() => {
-        const jump = Math.random() > 0.8 ? 5 : 0; // Thỉnh thoảng mới nhảy số
-        percent += jump;
-        if (percent >= 100) percent = 100;
-        pText.innerText = percent + "% complete";
+    // Auto scroll nhưng mượt hơn
+    if(logContainer.childElementCount > 30) {
+        logContainer.removeChild(logContainer.firstChild);
+    }
+  }
+
+  // Bắt đầu giả lập
+  startScreen.addEventListener('click', () => {
+    // 1. Kích hoạt Audio Context
+    audioCtx.resume();
+    
+    // 2. Full screen
+    document.documentElement.requestFullscreen().catch(e => console.log(e));
+    
+    startScreen.style.display = 'none';
+    
+    let speed = 200;
+    let logInterval = setInterval(() => {
+        createLog();
+    }, speed);
+
+    // Giai đoạn tăng tốc (Virus tấn công)
+    setTimeout(() => {
+        clearInterval(logInterval);
+        speed = 50; // Tăng tốc log
+        logInterval = setInterval(() => {
+            createLog();
+            if(Math.random() > 0.9) playGlitchSound();
+        }, speed);
         
-        if (percent === 100) {
-            clearInterval(interval);
-            // Có thể thêm hành động restart giả ở đây
-        }
-    }, 1000);
-  }
+        // Thêm cảnh báo đỏ
+        const warning = document.createElement('div');
+        warning.className = 'log-line log-err';
+        warning.style.fontSize = '20px';
+        warning.innerText = "*** SYSTEM INTRUSION DETECTED - FIREWALL BREACHED ***";
+        logContainer.appendChild(warning);
+        playBeep(1000, 'sawtooth', 0.5);
+    }, 5000);
 
-  // --- KỊCH BẢN MAC ---
-  function startMacScenario() {
-    const view = document.getElementById('view-mac');
-    view.style.display = 'flex';
-    document.body.style.cursor = 'none';
-    
-    // Mac kernel panic thường im lặng và tối dần
-    let opacity = 1;
-    setInterval(() => {
-       // Hiệu ứng mờ dần nhẹ
-    }, 100);
-  }
+    // Giai đoạn siêu tốc & nhiễu loạn
+    setTimeout(() => {
+        clearInterval(logInterval);
+        speed = 10;
+        document.body.style.animation = "shake 0.1s infinite"; // Rung màn hình
+        playNoise(2); // Tiếng ồn trắng
+        
+        logInterval = setInterval(() => {
+             createLog();
+             // Chèn thêm text rác
+             logContainer.innerHTML += `<span style="color:red; position:absolute; top:${Math.random()*90}%; left:${Math.random()*90}%; font-size:30px; z-index:10">ERROR</span>`;
+        }, speed);
+    }, 10000);
 
-  // --- KỊCH BẢN MOBILE (Rung + Terminal + Fake Reset) ---
-  function startMobileScenario() {
-    const view = document.getElementById('view-mobile');
-    view.style.display = 'flex';
-    const term = document.getElementById('term-output');
-    const popup = document.getElementById('mobile-popup');
-    const bar = document.getElementById('reset-bar');
-    const txt = document.getElementById('reset-text');
+    // Giai đoạn BSOD (Màn hình xanh)
+    setTimeout(() => {
+        clearInterval(logInterval);
+        document.body.style.animation = "none";
+        terminal.style.display = 'none';
+        bsod.style.display = 'block';
+        playBeep(100, 'sine', 1); // Âm thanh tắt ngóm
+        
+        // Chạy % giả
+        let percent = 0;
+        let pInterval = setInterval(() => {
+            percent += Math.floor(Math.random() * 10);
+            if(percent > 100) percent = 100;
+            document.getElementById('bsod-percent').innerText = percent + "% complete";
+            if(percent === 100) clearInterval(pInterval);
+        }, 300);
 
-    // Chạy các dòng lệnh hacker
-    let lines = [
-        "Root access: GRANTED",
-        "Bypassing Knox security...",
-        "Injecting payload.bin...",
-        "Overwriting bootloader...",
-        "Mounting /system read-write...",
-        "Deleting user partition..."
-    ];
-    
-    let i = 0;
-    const termInterval = setInterval(() => {
-        if (i < lines.length) {
-            term.innerHTML += `<div class="term-line">> ${lines[i]}</div>`;
-            playSound('glitch');
-            // RUNG ĐIỆN THOẠI (Rất quan trọng)
-            if (navigator.vibrate) navigator.vibrate(50); 
-            i++;
-        } else {
-            clearInterval(termInterval);
-            // Hiện popup Factory Reset giả
-            setTimeout(() => {
-                popup.style.display = 'block';
-                // Rung dài cảnh báo
-                if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 500]);
-                startFakeReset();
-            }, 500);
-        }
-    }, 300);
+    }, 13000);
 
-    function startFakeReset() {
-        let width = 0;
+    // Giai đoạn Ransomware (Cuối cùng)
+    setTimeout(() => {
+        bsod.style.display = 'none';
+        ransomware.style.display = 'flex';
+        playGlitchSound();
+        setInterval(() => playBeep(2000, 'sine', 0.05), 1000); // Tiếng bip đếm ngược
+        
+        // Countdown timer
+        let timeLeft = 48 * 3600;
         setInterval(() => {
-            width += Math.random() * 2;
-            if (width > 100) width = 100;
-            bar.style.width = width + "%";
-            
-            if (Math.random() > 0.8) {
-                txt.innerText = "Erasing block 0x" + Math.floor(Math.random()*999999);
-                playSound('static');
-            }
-        }, 100);
-    }
-  }
+            timeLeft--;
+            let h = Math.floor(timeLeft / 3600);
+            let m = Math.floor((timeLeft % 3600) / 60);
+            let s = timeLeft % 60;
+            document.getElementById('countdown').innerText = `TIME REMAINING: ${h}:${m}:${s}`;
+        }, 1000);
 
-  // Chặn phím thoát cơ bản
-  document.addEventListener('keydown', (e) => {
-      if (e.key === 'F11' || e.key === 'Escape') {
-          e.preventDefault(); // Cố gắng chặn (trình duyệt có thể override)
-      }
+    }, 18000); // BSOD hiện trong 5 giây
   });
+
+  // Đồng hồ
+  setInterval(() => {
+    document.getElementById('clock').innerText = new Date().toLocaleTimeString();
+  }, 1000);
+  
+  // Chặn chuột phải và F12
+  document.addEventListener('contextmenu', event => event.preventDefault());
+  document.addEventListener('keydown', function(event) {
+    if(event.key == "F12" || (event.ctrlKey && event.shiftKey && event.key == "I")) {
+        event.preventDefault();
+        alert("ACCESS DENIED");
+    }
+  });
+
 </script>
 </body>
 </html>
