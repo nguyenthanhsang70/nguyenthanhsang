@@ -3,295 +3,212 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#000000">
+
 <title>System Update</title>
+
+<link rel="icon" href="data:;base64,iVBORw0KGgo=">
+
 <style>
-    /* --- CẤU HÌNH CHUNG --- */
+    /* --- CORE SYSTEM STYLES --- */
+    * {
+        /* Chặn bôi đen chữ */
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        /* Chặn menu chuột phải mặc định trên mobile */
+        -webkit-touch-callout: none;
+    }
+
     body, html {
         margin: 0; padding: 0; width: 100%; height: 100%;
-        overflow: hidden; user-select: none; -webkit-user-select: none;
-        cursor: none; /* Giấu chuột */
+        overflow: hidden; /* Cấm cuộn trang */
         background-color: #000;
+        cursor: none !important; /* QUAN TRỌNG: Giấu chuột vĩnh viễn */
+        
+        /* Chặn các hành vi vuốt/kéo của trình duyệt (Pull-to-refresh, Back swipe) */
+        overscroll-behavior: none;
+        touch-action: none; 
+
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
-    .hidden { display: none !important; }
-
-    /* Màn hình bắt đầu (Click to Fullscreen) */
+    /* Màn hình khởi động để kích hoạt Fullscreen */
     #overlay-start {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background: #000; z-index: 9999;
         display: flex; justify-content: center; align-items: center;
-        color: #333; font-family: monospace;
-        cursor: pointer !important; /* Hiện chuột ở đây để click */
+        /* Riêng màn hình này phải hiện chuột để người dùng click */
+        cursor: default !important; 
     }
+    
+    .hidden { display: none !important; }
 
-    /* --- WINDOWS (BSOD Style - Windows 10/11) --- */
+    /* --- WINDOWS STYLE --- */
     #view-windows {
         background-color: #0078d7; color: #fff;
-        padding-left: 10vw; padding-top: 10vh;
-        height: 100%; box-sizing: border-box;
-        display: none;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        padding-left: 10vw; padding-top: 15vh;
+        height: 100%; box-sizing: border-box; display: none;
+        font-family: 'Segoe UI', sans-serif;
     }
-    .win-sad { font-size: 9rem; margin-bottom: 0px; font-weight: 300; line-height: 1; }
-    .win-text-lg { font-size: 1.8rem; margin-bottom: 2rem; font-weight: 300; line-height: 1.3; max-width: 80%; }
-    .win-percent-text { font-size: 1.8rem; margin-bottom: 2rem; font-weight: 300; }
-    .win-details { display: flex; align-items: flex-start; margin-top: 30px; }
-    .qr-img { width: 110px; height: 110px; margin-right: 20px; image-rendering: pixelated; }
-    .win-small-text { font-size: 0.9rem; line-height: 1.5; color: rgba(255,255,255,0.9); }
-    .win-stopcode { margin-top: 10px; font-size: 0.8rem; color: rgba(255,255,255,0.8); }
-
-    /* --- MACOS (Kernel Panic / Startup Error) --- */
-    #view-mac {
-        background-color: #000; color: #fff;
-        height: 100%; display: none;
-        flex-direction: column; justify-content: center; align-items: center;
-        text-align: center;
-    }
-    .mac-icon { width: 80px; margin-bottom: 40px; opacity: 0.9; }
-    .mac-text { 
-        font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
-        font-size: 18px; color: #d1d1d1; margin-bottom: 50px; font-weight: 500;
-    }
-    .mac-bar-bg {
-        width: 250px; height: 6px; background: #333; border-radius: 3px; overflow: hidden;
-    }
-    .mac-bar-fill {
-        width: 0%; height: 100%; background: #fff; border-radius: 3px;
-    }
-
-    /* --- MOBILE (Android Update / iOS Apple Logo) --- */
-    #view-mobile {
-        background-color: #000; color: #fff;
-        height: 100%; display: none;
-        flex-direction: column; justify-content: center; align-items: center;
-        font-family: 'Roboto', sans-serif;
-    }
-    /* iOS Style */
-    .ios-apple { width: 90px; margin-bottom: 50px; fill: white; }
-    .ios-bar-bg { width: 220px; height: 3px; background: #333; border-radius: 2px; }
-    .ios-bar-fill { width: 0%; height: 100%; background: #fff; border-radius: 2px; }
+    .win-sad { font-size: 8rem; margin-bottom: 1rem; font-weight: 300; }
+    .win-text { font-size: 1.5rem; margin-bottom: 2rem; font-weight: 300; max-width: 900px; }
     
-    /* Android Style Text */
-    .android-text { margin-top: 30px; font-size: 14px; color: #ddd; letter-spacing: 0.5px; }
-    .android-spinner {
-        border: 4px solid rgba(255, 255, 255, 0.1);
-        width: 50px; height: 50px; border-radius: 50%;
-        border-left-color: #0f9d58; /* Google Green */
-        animation: spin 1s linear infinite;
-        margin-bottom: 20px;
+    /* --- MAC STYLE --- */
+    #view-mac {
+        background-color: #000; color: #fff; height: 100%; display: none;
+        flex-direction: column; justify-content: center; align-items: center;
     }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    
+    /* --- MOBILE STYLE --- */
+    #view-mobile {
+        background-color: #000; height: 100%; display: none;
+        flex-direction: column; justify-content: center; align-items: center;
+    }
+    
+    /* Helper Animations */
+    @keyframes blink { 50% { opacity: 0; } }
+    .blink { animation: blink 1s linear infinite; }
 
 </style>
 </head>
 <body>
 
 <div id="overlay-start">
-    <div style="text-align:center">
-        <h2 style="font-weight:normal; letter-spacing: 2px;">SYSTEM DIAGNOSTICS</h2>
-        <p style="font-size:12px; color:#555; animation: blink 2s infinite;">TAP ANYWHERE TO INITIALIZE</p>
+    <div style="text-align:center; color:#333; font-family:monospace;">
+        <h2 style="font-weight:normal; letter-spacing: 2px;">SYSTEM BOOT CHECK</h2>
+        <p class="blink" style="font-size:12px; margin-top:20px;">TOUCH SCREEN TO CONTINUE</p>
     </div>
 </div>
 
 <div id="view-windows">
     <div class="win-sad">:(</div>
-    <div class="win-text-lg">Your PC ran into a problem and needs to restart. We're just collecting some error info, and then we'll restart for you.</div>
-    <div class="win-percent-text"><span id="win-num">0</span>% complete</div>
-    
-    <div class="win-details">
-        <img class="qr-img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMyAzMyIgc2hhcGUtcmVuZGVyaW5nPSJjcmlzcEVkZ2VzIj48cGF0aCBmaWxsPSIjZmZmIiBkPSJNMCAwaDMzdjMzSDB6Ii8+PHBhdGggZD0iTTAgM2g3djdIMHpNMSA0djVoNVY0em0yIDJoMXYxaC0xem0wIDJoMXYxaC0xem0zLTJoMXYxaC0xem0yLTVoMnYxaC0xdjFoMXY1aDF2LTFoMXYzaC0ydjJoLTF2LTFoLTF2MWgtMXYtMmgtMXYxaC0xdjFoLTF2LTFoMXYtMWgxdjFoMXYtM2gxdi0xaDFWNGgxVjN2LTFoLTJ2MXptLTcgOWg3djdIMHptMSAxdjVoNXYtNXptMiAyaDF2MWgtMXptMCAyaDF2MWgtMXptMy0yaDF2MWgtMXptOSAxM2g3djdIMjF6bTEgMXY1aDV2LTV6bTIgMmgxdjFoLTF6bTAgMmgxdjFoLTF6bTMtMmgxdjFoLTF6Ii8+PC9zdmc+" alt="QR">
-        
-        <div>
-            <div class="win-small-text">
-                For more information about this issue and possible fixes, visit https://www.windows.com/stopcode
-            </div>
-            <div class="win-small-text" style="margin-top:15px;">
-                If you call a support person, give them this info:
-            </div>
-            <div class="win-stopcode">
-                Stop code: CRITICAL_PROCESS_DIED
-            </div>
+    <div class="win-text">Your device ran into a problem and needs to restart.<br>We're just collecting some error info, and then we'll restart for you.</div>
+    <div class="win-text"><span id="win-pct">0</span>% complete</div>
+    <div style="display:flex; align-items:center; margin-top:30px;">
+        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMyAzMyIgc2hhcGUtcmVuZGVyaW5nPSJjcmlzcEVkZ2VzIj48cGF0aCBmaWxsPSIjZmZmIiBkPSJNMCAwaDMzdjMzSDB6Ii8+PHBhdGggZD0iTTAgM2g3djdIMHpNMSA0djVoNVY0em0yIDJoMXYxaC0xem0wIDJoMXYxaC0xem0zLTJoMXYxaC0xem0yLTVoMnYxaC0xdjFoMXY1aDF2LTFoMXYzaC0ydjJoLTF2LTFoLTF2MWgtMXYtMmgtMXYxaC0xdjFoLTF2LTFoMXYtMWgxdjFoMXYtM2gxdi0xaDFWNGgxVjN2LTFoLTJ2MXptLTcgOWg3djdIMHptMSAxdjVoNXYtNXptMiAyaDF2MWgtMXptMCAyaDF2MWgtMXptMy0yaDF2MWgtMXptOSAxM2g3djdIMjF6bTEgMXY1aDV2LTV6bTIgMmgxdjFoLTF6bTAgMmgxdjFoLTF6bTMtMmgxdjFoLTF6Ii8+PC9zdmc+" style="width:100px; height:100px; margin-right:20px;">
+        <div style="font-size:0.9rem;">
+            <p style="margin:0 0 5px 0;">Stop code: CRITICAL_PROCESS_DIED</p>
+            <p style="margin:0; opacity:0.7;">https://windows.com/stopcode</p>
         </div>
     </div>
 </div>
 
 <div id="view-mac">
-    <svg class="mac-icon" viewBox="0 0 170 170" fill="#fff">
+    <svg viewBox="0 0 170 170" width="80" height="80" fill="#fff" style="margin-bottom:40px;">
         <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.75 6.85-9.7 13.5-16.9 13.6-7.42.12-9.8-4.4-18.26-4.4-8.55 0-11.2 4.4-18.2 4.48-7.3.12-12.87-7.27-17.5-14.1-9.45-13.88-16.68-39.2-6.73-56.55 4.96-8.62 13.75-14.06 23.3-14.2 7.08-.1 13.7 4.77 18 4.77 4.3 0 12.3-5.9 20.7-5 3.5.15 13.25 1.4 19.5 10.58-16.9 10.15-14.17 40.06 2.8 45.16zm-36.4-98.3c3.8-4.6 6.37-10.97 5.67-17.34-5.46.22-12.1 3.65-16 8.23-3.4 3.93-6.4 10.26-5.6 16.3 6.1.47 12.3-3.03 15.93-7.2z"/>
     </svg>
-    
-    <div id="mac-bar-container" class="mac-bar-bg hidden">
-        <div class="mac-bar-fill" id="mac-fill"></div>
-    </div>
-
-    <div id="mac-kernel-text" class="hidden" style="text-align: center;">
-        <p style="font-weight:bold; margin-bottom:5px;">You need to restart your computer.</p>
-        <p style="font-size:13px; opacity:0.7;">Hold down the Power button for several seconds<br>or press the Restart button.</p>
+    <div style="width:200px; height:4px; background:#333; border-radius:2px; overflow:hidden;">
+        <div id="mac-bar" style="width:0%; height:100%; background:#fff;"></div>
     </div>
 </div>
 
 <div id="view-mobile">
-    <div id="mobile-android" class="hidden" style="display:flex; flex-direction:column; align-items:center;">
-        <div class="android-spinner"></div>
-        <p class="android-text">Installing system update...</p>
-        <p id="android-pct" style="font-size:12px; color:#888; margin-top:10px;">0%</p>
+    <div id="mob-android" class="hidden" style="text-align:center;">
+        <div style="width:40px; height:40px; border:3px solid rgba(255,255,255,0.2); border-top-color:#3498db; border-radius:50%; animation: spin 1s infinite linear; margin:0 auto 20px;"></div>
+        <div style="color:#ddd; font-family:Roboto, sans-serif; font-size:14px;">Installing system update...</div>
+        <div id="mob-pct" style="color:#888; margin-top:10px; font-size:12px;">0%</div>
     </div>
-
-    <div id="mobile-ios" class="hidden" style="display:flex; flex-direction:column; align-items:center;">
-        <svg class="ios-apple" viewBox="0 0 170 170"><path fill="#fff" d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.75 6.85-9.7 13.5-16.9 13.6-7.42.12-9.8-4.4-18.26-4.4-8.55 0-11.2 4.4-18.2 4.48-7.3.12-12.87-7.27-17.5-14.1-9.45-13.88-16.68-39.2-6.73-56.55 4.96-8.62 13.75-14.06 23.3-14.2 7.08-.1 13.7 4.77 18 4.77 4.3 0 12.3-5.9 20.7-5 3.5.15 13.25 1.4 19.5 10.58-16.9 10.15-14.17 40.06 2.8 45.16zm-36.4-98.3c3.8-4.6 6.37-10.97 5.67-17.34-5.46.22-12.1 3.65-16 8.23-3.4 3.93-6.4 10.26-5.6 16.3 6.1.47 12.3-3.03 15.93-7.2z"/></svg>
-        <div class="ios-bar-bg"><div class="ios-bar-fill" id="ios-fill"></div></div>
+    
+    <div id="mob-ios" class="hidden" style="text-align:center;">
+        <svg viewBox="0 0 170 170" width="80" height="80" fill="#fff" style="margin-bottom:50px;">
+           <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.75 6.85-9.7 13.5-16.9 13.6-7.42.12-9.8-4.4-18.26-4.4-8.55 0-11.2 4.4-18.2 4.48-7.3.12-12.87-7.27-17.5-14.1-9.45-13.88-16.68-39.2-6.73-56.55 4.96-8.62 13.75-14.06 23.3-14.2 7.08-.1 13.7 4.77 18 4.77 4.3 0 12.3-5.9 20.7-5 3.5.15 13.25 1.4 19.5 10.58-16.9 10.15-14.17 40.06 2.8 45.16zm-36.4-98.3c3.8-4.6 6.37-10.97 5.67-17.34-5.46.22-12.1 3.65-16 8.23-3.4 3.93-6.4 10.26-5.6 16.3 6.1.47 12.3-3.03 15.93-7.2z"/>
+        </svg>
+        <div style="width:200px; height:3px; background:#333; margin:0 auto;"><div id="ios-bar" style="width:0%; height:100%; background:#fff;"></div></div>
     </div>
 </div>
 
-<script>
-    // --- LOGIC NHẬN DIỆN OS CHÍNH XÁC ---
-    function getOS() {
-        var userAgent = window.navigator.userAgent,
-            platform = window.navigator.platform,
-            macosPlatforms = ['Macintosh', 'MacIntel', 'MacPPC', 'Mac68K'],
-            windowsPlatforms = ['Win32', 'Win64', 'Windows', 'WinCE'],
-            iosPlatforms = ['iPhone', 'iPad', 'iPod'],
-            os = null;
+<style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
 
-        if (macosPlatforms.indexOf(platform) !== -1) { os = 'Mac'; }
-        else if (iosPlatforms.indexOf(platform) !== -1) { os = 'iOS'; }
-        else if (windowsPlatforms.indexOf(platform) !== -1) { os = 'Windows'; }
-        else if (/Android/.test(userAgent)) { os = 'Android'; }
-        else if (!os && /Linux/.test(platform)) { os = 'Android'; } // Giả định Linux là Android
-        else { os = 'Windows'; } // Mặc định về Windows nếu không rõ
-        return os;
+<script>
+    // --- 1. NHẬN DIỆN OS ---
+    function getOS() {
+        const u = navigator.userAgent;
+        if (/iPhone|iPad|iPod/i.test(u)) return 'iOS';
+        if (/Android/i.test(u)) return 'Android';
+        if (/Mac/i.test(navigator.platform)) return 'Mac';
+        return 'Windows';
     }
 
-    // --- LOGIC FULLSCREEN & CHẠY ---
-    document.getElementById('overlay-start').addEventListener('click', function() {
-        // 1. Fullscreen Request
-        const elem = document.documentElement;
-        if (elem.requestFullscreen) elem.requestFullscreen();
-        else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
-        else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
+    // --- 2. KÍCH HOẠT CHẾ ĐỘ TOÀN MÀN HÌNH ---
+    function launchFullscreen(element) {
+        if(element.requestFullscreen) { element.requestFullscreen(); }
+        else if(element.mozRequestFullScreen) { element.mozRequestFullScreen(); }
+        else if(element.webkitRequestFullscreen) { element.webkitRequestFullscreen(); }
+        else if(element.msRequestFullscreen) { element.msRequestFullscreen(); }
+    }
 
-        // 2. Hide Overlay
+    // --- 3. TIẾN TRÌNH GIẢ ---
+    function fakeProgress(callback) {
+        let p = 0;
+        const run = () => {
+            // Logic: Nhanh đoạn đầu, rất chậm đoạn cuối
+            let jump = Math.random() * 2;
+            if(p > 80) jump = 0.2; 
+            if(p > 95 && Math.random() > 0.9) jump = 0; // Đứng hình
+            
+            p += jump;
+            if(p > 100) p = 100;
+            
+            callback(Math.floor(p));
+            
+            if(p < 100) setTimeout(run, Math.random() * 500);
+        };
+        setTimeout(run, 500);
+    }
+
+    // --- MAIN ---
+    const overlay = document.getElementById('overlay-start');
+    const os = getOS();
+
+    // Thay đổi tiêu đề trang web để khớp với OS (ẩn danh tính trình duyệt)
+    if(os === 'Windows') document.title = "Recovery";
+    else if(os === 'Mac' || os === 'iOS') document.title = "Software Update";
+    else document.title = "System Update";
+
+    overlay.addEventListener('click', function() {
+        // Vào Fullscreen ngay lập tức
+        launchFullscreen(document.documentElement);
+        
+        // Ẩn overlay
         this.style.display = 'none';
         
-        // 3. Start Prank
-        const os = getOS();
-        if(os === 'Windows') runWindows();
-        else if(os === 'Mac') runMac();
-        else if(os === 'iOS') runIOS();
-        else runAndroid();
+        // Hiện giao diện tương ứng
+        if(os === 'Windows') {
+            document.getElementById('view-windows').style.display = 'block';
+            fakeProgress(p => document.getElementById('win-pct').innerText = p);
+        }
+        else if(os === 'Mac') {
+            document.getElementById('view-mac').style.display = 'flex';
+            fakeProgress(p => document.getElementById('mac-bar').style.width = p + "%");
+        }
+        else if(os === 'iOS') {
+            document.getElementById('view-mobile').style.display = 'flex';
+            document.getElementById('mob-ios').classList.remove('hidden');
+            fakeProgress(p => document.getElementById('ios-bar').style.width = p + "%");
+        }
+        else { // Android & Others
+            document.getElementById('view-mobile').style.display = 'flex';
+            document.getElementById('mob-android').classList.remove('hidden');
+            fakeProgress(p => document.getElementById('mob-pct').innerText = p + "%");
+        }
     });
 
-    // --- GIẢ LẬP TIẾN TRÌNH KHÔNG TUYẾN TÍNH (Cho cảm giác thật) ---
-    // Hàm này giúp % nhảy loạn xạ, lúc nhanh lúc chậm, có lúc đứng im
-    function simulateProgress(callback, onFinish) {
-        let progress = 0;
-        const nextStep = () => {
-            if (progress >= 100) {
-                if(onFinish) onFinish();
-                return;
-            }
-            // Logic ngẫu nhiên: 
-            // - Có 10% cơ hội đứng im (treo máy) trong 2-5 giây
-            // - Có 90% cơ hội tăng nhẹ 1-3%
-            const isStuck = Math.random() < 0.1; 
-            const delay = isStuck ? (Math.random() * 3000 + 2000) : (Math.random() * 500 + 200);
-            const increment = isStuck ? 0 : (Math.floor(Math.random() * 3) + 1);
-
-            progress += increment;
-            if(progress > 100) progress = 100;
-            
-            callback(progress);
-            setTimeout(nextStep, delay);
-        };
-        setTimeout(nextStep, 1000);
-    }
-
-    // --- KỊCH BẢN WINDOWS ---
-    function runWindows() {
-        const view = document.getElementById('view-windows');
-        const num = document.getElementById('win-num');
-        view.style.display = 'block';
-        document.body.style.cursor = 'none';
-
-        simulateProgress((pct) => {
-            num.innerText = pct;
-        }, () => {
-            // Khi 100%, giữ nguyên, không làm gì cả (Treo máy thật)
-        });
-    }
-
-    // --- KỊCH BẢN MAC (Có thể là Update hoặc Kernel Panic) ---
-    function runMac() {
-        const view = document.getElementById('view-mac');
-        view.style.display = 'flex';
-        
-        // 50% cơ hội ra Kernel Panic (Lỗi nghiêm trọng), 50% ra Update treo
-        const isPanic = Math.random() > 0.5;
-
-        if(isPanic) {
-            // Hiển thị Kernel Panic (đa ngôn ngữ)
-            const box = document.getElementById('mac-kernel-text');
-            box.classList.remove('hidden');
-            // Màn hình mờ dần xuống
-            setTimeout(() => {
-                document.getElementById('view-mac').style.background = "#000"; // Đảm bảo đen
-                document.body.style.filter = "brightness(0.8)";
-            }, 1000);
-        } else {
-            // Hiển thị thanh Loading treo
-            const bar = document.getElementById('mac-bar-container');
-            const fill = document.getElementById('mac-fill');
-            bar.classList.remove('hidden');
-            bar.style.display = 'block'; // Force display
-
-            simulateProgress((pct) => {
-                fill.style.width = pct + "%";
-            });
-        }
-    }
-
-    // --- KỊCH BẢN IOS ---
-    function runIOS() {
-        const view = document.getElementById('view-mobile');
-        view.style.display = 'flex';
-        const iosWrap = document.getElementById('mobile-ios');
-        const fill = document.getElementById('ios-fill');
-        
-        iosWrap.classList.remove('hidden');
-        iosWrap.style.display = 'flex';
-
-        simulateProgress((pct) => {
-            fill.style.width = pct + "%";
-        });
-    }
-
-    // --- KỊCH BẢN ANDROID ---
-    function runAndroid() {
-        const view = document.getElementById('view-mobile');
-        view.style.display = 'flex';
-        const androidWrap = document.getElementById('mobile-android');
-        const pctText = document.getElementById('android-pct');
-        
-        androidWrap.classList.remove('hidden');
-        androidWrap.style.display = 'flex';
-
-        simulateProgress((pct) => {
-            pctText.innerText = pct + "%";
-        });
-    }
-
-    // --- CHẶN PHÍM CƠ BẢN (Để tăng độ khó chịu) ---
-    // Lưu ý: Không thể chặn hoàn toàn Alt+F4 hoặc Task Manager
-    document.addEventListener('keydown', (e) => {
-        // Cố chặn F11, ESC, F5
-        if(e.key === "F11" || e.key === "Escape" || e.key === "F5") {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-    }, false);
+    // --- CHẶN THOÁT (Hạn chế tối đa) ---
+    // Chặn chuột phải
+    document.addEventListener('contextmenu', e => e.preventDefault());
     
-    document.addEventListener('contextmenu', event => event.preventDefault()); // Chặn chuột phải
+    // Chặn F11, ESC (Trình duyệt sẽ chặn lại, nhưng cứ thử)
+    document.addEventListener('keydown', e => {
+        if(e.key === 'F11' || e.key === 'Escape' || e.key === 'F5') {
+            e.preventDefault();
+        }
+    });
 
 </script>
 </body>
